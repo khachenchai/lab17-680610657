@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteButton } from "@/components/confirm-button";
 import {
   Table,
@@ -13,6 +14,9 @@ export function CourseTable() {
   const courses = useEnrollmentStore((s) => s.courses);
   const removeCourse = useEnrollmentStore((s) => s.removeCourse);
 
+  console.log("courses: ", courses);
+  
+
   return (
     <div className="rounded-lg border">
       <Table>
@@ -20,38 +24,83 @@ export function CourseTable() {
           <TableRow>
             <TableHead>รหัสวิชา</TableHead>
             <TableHead>ชื่อวิชา</TableHead>
+            <TableHead>หลักสูตร</TableHead>
+            <TableHead>ภาคการศึกษา</TableHead>
+            <TableHead>รายละเอียด</TableHead>
             <TableHead>ผู้สอน</TableHead>
-            <TableHead className="w-20">Action</TableHead>
+            <TableHead>รับข่าวสารทางอีเมล</TableHead>
+            <TableHead className="w-20 text-center">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {courses.length === 0 && (
             <TableRow>
               <TableCell
-                colSpan={4}
+                colSpan={8}
                 className="h-20 text-center text-muted-foreground"
               >
-                ยังไม่มีวิชาที่เปิดสอน
+                ยังไม่มีข้อมูลวิชาเรียน
               </TableCell>
             </TableRow>
           )}
           {courses.map((course) => (
             <TableRow key={course.courseId}>
-              <TableCell>{course.courseId}</TableCell>
+              <TableCell className="font-medium">{course.courseId}</TableCell>
               <TableCell>{course.courseTitle}</TableCell>
               <TableCell>
-                {/* แสดงรายชื่อผู้สอนเป็นข้อความธรรมดา คั่นด้วย ", " */}
-                {course.instructors.length === 0 ? (
-                  <span className="text-muted-foreground">ยังไม่มีผู้สอน</span>
+                {course.program ? (
+                  <Badge variant="outline" className="rounded-full">
+                    {course.program}
+                  </Badge>
                 ) : (
-                  course.instructors.join(", ")
+                  "-"
                 )}
               </TableCell>
               <TableCell>
+                {course.semester === "1"
+                  ? "ภาคการศึกษาที่ 1"
+                  : course.semester === "2"
+                  ? "ภาคการศึกษาที่ 2"
+                  : course.semester === "3"
+                  ? "ภาคฤดูร้อน"
+                  : "-"}
+              </TableCell>
+              <TableCell
+                className="max-w-[200px] whitespace-normal text-muted-foreground"
+                title={course.description}
+              >
+                {course.description || "-"}
+              </TableCell>
+              <TableCell>
+                {course.instructors.length === 0 ? (
+                  <span className="text-muted-foreground">-</span>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {course.instructors.map((inst, idx) => (
+                      <div key={idx} className="flex flex-col">
+                        <span className="text-sm font-medium">{inst.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {inst.email}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>
+                {course.notifyByEmail ? (
+                  <Badge>
+                    รับ
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">ไม่รับ</Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-center">
                 <ConfirmDeleteButton
-                  label={`ลบวิชา ${course.courseId}`}
-                  title="ลบวิชา?"
-                  description={`ลบ ${course.courseId} — ${course.courseTitle} ออกจากรายวิชาที่เปิดสอน พร้อมการลงทะเบียนทั้งหมดของวิชานี้`}
+                  label={`ลบ ${course.courseId}`}
+                  title="ยืนยันการลบวิชา?"
+                  description={`คุณต้องการลบวิชา ${course.courseId} ${course.courseTitle} ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้`}
                   onConfirm={() => removeCourse(course.courseId)}
                 />
               </TableCell>
